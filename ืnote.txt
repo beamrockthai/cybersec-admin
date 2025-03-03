@@ -1,0 +1,2 @@
+schema.prisma คืออ ใช้กําหนด model เเละ DATABASE_URL
+ต่อไปต้องอัปเดทฐานข้อมูลโดยใช้ การไมเกรชั่น npx prisma migrate dev --name init
