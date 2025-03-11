@@ -1,0 +1,11 @@
+# Users Create
+PUT  http://localhost:3000/user/1
+Content-Type: application/json
+
+{
+    
+    "username":"beamza444444",
+    "password":"demo3"
+    
+}
+
