@@ -1,6 +1,7 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
 
 const app = express();
 const PORT = 5000;
@@ -19,11 +20,14 @@ app.post("/api/usercreate", async (req, res) => {
         .json({ error: "Username and password are required" });
     }
 
+    const hashedPassword = await bcrypt.hash(password,10);
+
     const user = await prisma.user.create({
-      data: { username, password },
+      data: { username, password:hashedPassword },
     });
 
-    res.json({ message: "User created successfully", user });
+    const { password: _, ...userWithoutPass } = user;
+    res.json({ message: "User created successfully", user: userWithoutPass });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to create user" });
@@ -33,7 +37,8 @@ app.post("/api/usercreate", async (req, res) => {
 app.get("/api/getusers", async (req, res) => {
   try {
     const users = await prisma.user.findMany();
-    res.json(users);
+    const safeUsers = users.map(({password, ...rest}) =>rest);
+    res.json(safeUsers);
   } catch (error) {
     console.log("Error", error);
     res.status(500).json({ error: "no Users All na", details: error.message });
@@ -51,7 +56,8 @@ app.get("/api/user/:id", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json(user);
+    const {password, ...safeUsers} = user;
+    res.json(safeUsers);
   } catch (error) {
     console.error("❌ Error:", error);
     res
@@ -65,17 +71,23 @@ app.put("/api/userupdate/:id", async (req, res) => {
     const { id } = req.params;
     const { username, password } = req.body;
 
+    const dataToUpdate = { username };
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      dataToUpdate.password = hashedPassword;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: { username, password },
+      data: dataToUpdate,
     });
 
-    res.json({ message: "User updated successfully", updatedUser });
+    const { password: _, ...safeUser } = updatedUser;
+    res.json({ message: "User updated successfully", user: safeUser });
   } catch (error) {
     console.error("❌ Error:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to update user", details: error.message });
+    res.status(500).json({ error: "Failed to update user", details: error.message });
   }
 });
 

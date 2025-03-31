@@ -1,0 +1,7 @@
+POST http://localhost:5000/api/usercreate
+Content-Type: application/json
+
+{
+    "username":"THATCHANON RODWONG",
+    "password":"beam78895530TI"
+}
